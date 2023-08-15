@@ -40,12 +40,9 @@ public class LoanController {
         return new ResponseEntity<>((Loan) loan.getBody(), HttpStatus.OK);
     }
 
-    @PostMapping(value = "/add/{id}")
-    public ResponseEntity<?> addLoan(@PathVariable("id") int id) {
-        ResponseEntity<?> loan = loanService.addLoan(id);
-        if (loan == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    @PostMapping(value = "/add")
+    public ResponseEntity<?> addLoan() {
+        ResponseEntity<?> loan = loanService.addLoan();
         return new ResponseEntity<>(loan, HttpStatus.OK);
     }
 }

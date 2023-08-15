@@ -29,7 +29,7 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "us_id")
+    @Column(name = "us_id", nullable = false)
     private int userId;
 
     @Column(name = "us_firstName")

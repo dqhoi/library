@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import com.app.library.dto.*;
 import com.app.library.model.*;
 import com.app.library.repository.*;
-import com.app.library.service.*;
 import com.app.library.utils.SecurityUtil;
 
 @Service
@@ -22,9 +21,6 @@ public class LoanServiceImpl implements com.app.library.service.ILoanService {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private IBookService bookService;
 
     @Override
     public ResponseEntity<?> searchLoan(int Id) {
@@ -61,87 +57,84 @@ public class LoanServiceImpl implements com.app.library.service.ILoanService {
     public ResponseEntity<?> updateLoan(int Id, LoanDto newLoan) {
         // if (SecurityUtil.hasCurrentUserAnyOfAuthorities("ADMIN_PERMISSION")) {
 
-            Optional<Loan> loan = loanRepository.findById(Id);
-            if (!loan.isPresent()) {
-                throw new RuntimeException("Cannot find loan with id: " + Id);
+        Optional<Loan> loan = loanRepository.findById(Id);
+        if (!loan.isPresent()) {
+            throw new RuntimeException("Cannot find loan with id: " + Id);
+        }
+
+        Loan loan1 = loan.get();
+
+        // Update loan properties
+        loan1.setLoanDueDate(newLoan.getLoanDueDate());
+
+        // Update by user with date
+        loan1.setUpdatedAt(LocalDateTime.now());
+        loan1.setUpdatedBy(null);
+
+        User user = loan1.getUser();
+        // kiểm tra xem newLoan.getUser() có tồn tại không
+        if (newLoan.getUser().getUserId() == user.getUserId()) {
+            if (newLoan.getUser().getUsername() != user.getUsername()) {
+                user.setUsername(newLoan.getUser().getUsername());
             }
-
-            Loan loan1 = loan.get();
-
-            // Update loan properties
-            loan1.setLoanDueDate(newLoan.getLoanDueDate());
-
-            // Update by user with date
-            loan1.setUpdatedAt(LocalDateTime.now());
-            loan1.setUpdatedBy(null);
-
-            User user = loan1.getUser();
-            // kiểm tra xem newLoan.getUser() có tồn tại không
-            if (newLoan.getUser().getUserId() == user.getUserId()) {
-                if (newLoan.getUser().getUsername() != user.getUsername()) {
-                    user.setUsername(newLoan.getUser().getUsername());
-                }
-                if (newLoan.getUser().getEmail() != user.getEmail()) {
-                    user.setEmail(newLoan.getUser().getEmail());
-                }
-                if (newLoan.getUser().getFirstName() != user.getFirstName()) {
-                    user.setFirstName(newLoan.getUser().getFirstName());
-                }
-                if (newLoan.getUser().getLastName() != user.getLastName()) {
-                    user.setLastName(newLoan.getUser().getLastName());
-                }
-                if (newLoan.getUser().getAddress() != user.getAddress()) {
-                    user.setAddress(newLoan.getUser().getAddress());
-                }
-                if (newLoan.getUser().getAvatarUrl() != user.getAvatarUrl()) {
-                    user.setAvatarUrl(newLoan.getUser().getAvatarUrl());
-                }
-                userRepository.save(user);
-            } else {
-                throw new RuntimeException("Cannot update user with id: " + newLoan.getUser().getUserId());
+            if (newLoan.getUser().getEmail() != user.getEmail()) {
+                user.setEmail(newLoan.getUser().getEmail());
             }
+            if (newLoan.getUser().getFirstName() != user.getFirstName()) {
+                user.setFirstName(newLoan.getUser().getFirstName());
+            }
+            if (newLoan.getUser().getLastName() != user.getLastName()) {
+                user.setLastName(newLoan.getUser().getLastName());
+            }
+            if (newLoan.getUser().getAddress() != user.getAddress()) {
+                user.setAddress(newLoan.getUser().getAddress());
+            }
+            if (newLoan.getUser().getAvatarUrl() != user.getAvatarUrl()) {
+                user.setAvatarUrl(newLoan.getUser().getAvatarUrl());
+            }
+            userRepository.save(user);
+        } else {
+            throw new RuntimeException("Cannot update user with id: " + newLoan.getUser().getUserId());
+        }
 
-            List<Book> books = loan1.getBooks();
-            for (Book bookLoan : books) {
-                for (BookDto booknewLoan : newLoan.getBooks()) {
-                    if (booknewLoan.getBookId() == bookLoan.getBookId()) {
-                        int totalQuantity = bookLoan.getBookQuantity()
-                                + bookRepository.findById(booknewLoan.getBookId()).get().getBookQuantity();
-                        if (booknewLoan.getBookQuantity() < totalQuantity) {
-                            bookLoan.setBookQuantity(booknewLoan.getBookQuantity());
-                            bookRepository.findById(bookLoan.getBookId()).get().setBookQuantity(totalQuantity
-                                    - booknewLoan.getBookQuantity());
-                        } else {
-                            throw new RuntimeException("Cannot update book with id: " + booknewLoan.getBookId());
-                        }
-                    } else {
-                        books.add(bookRepository.findById(booknewLoan.getBookId())
-                            .orElseThrow(() -> new RuntimeException("Cannot find book with id: " + booknewLoan.getBookId())));
-                        bookLoan.setBookId(booknewLoan.getBookId());
+        List<Book> books = loan1.getBooks();
+        for (Book bookLoan : books) {
+            for (BookDto booknewLoan : newLoan.getBooks()) {
+                if (booknewLoan.getBookId() == bookLoan.getBookId()) {
+                    int totalQuantity = bookLoan.getBookQuantity()
+                            + bookRepository.findById(booknewLoan.getBookId()).get().getBookQuantity();
+                    if (booknewLoan.getBookQuantity() < totalQuantity) {
                         bookLoan.setBookQuantity(booknewLoan.getBookQuantity());
-                        bookLoan.setBookTitle(booknewLoan.getBookTitle());
-                        bookRepository.findById(booknewLoan.getBookId()).get().setBookQuantity(
-                                bookRepository.findById(booknewLoan.getBookId()).get().getBookQuantity()
-                                        - booknewLoan.getBookQuantity());
+                        bookRepository.findById(bookLoan.getBookId()).get().setBookQuantity(totalQuantity
+                                - booknewLoan.getBookQuantity());
+                    } else {
+                        throw new RuntimeException("Cannot update book with id: " + booknewLoan.getBookId());
                     }
+                } else {
+                    books.add(bookRepository.findById(booknewLoan.getBookId())
+                            .orElseThrow(() -> new RuntimeException(
+                                    "Cannot find book with id: " + booknewLoan.getBookId())));
+                    bookLoan.setBookId(booknewLoan.getBookId());
+                    bookLoan.setBookQuantity(booknewLoan.getBookQuantity());
+                    bookLoan.setBookTitle(booknewLoan.getBookTitle());
+                    bookRepository.findById(booknewLoan.getBookId()).get().setBookQuantity(
+                            bookRepository.findById(booknewLoan.getBookId()).get().getBookQuantity()
+                                    - booknewLoan.getBookQuantity());
                 }
             }
+        }
 
-            loanRepository.save(loan1);
-            return new ResponseEntity<>(loan1, HttpStatus.OK);
-        //}
+        loanRepository.save(loan1);
+        return new ResponseEntity<>(loan1, HttpStatus.OK);
+        // }
         // return null;
     }
 
     @Override
-    public ResponseEntity<?> addLoan(int Id) {
-        if (!loanRepository.findById(Id).isPresent()) {
-            Loan newLoan = new Loan();
-            newLoan.setLoanId(Id);
-            loanRepository.save(newLoan);
-            return new ResponseEntity<>(newLoan, HttpStatus.OK);
-        }
-        return null;
+    public ResponseEntity<?> addLoan() {
+        Loan newLoan = new Loan();
+        loanRepository.save(newLoan);
+        return new ResponseEntity<>(newLoan, HttpStatus.OK);
     }
 
 }

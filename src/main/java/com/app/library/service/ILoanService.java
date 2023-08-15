@@ -15,6 +15,6 @@ public interface ILoanService {
 
     public ResponseEntity<?> updateLoan(int Id, LoanDto newLoan);
 
-    public ResponseEntity<?> addLoan(int Id);
+    public ResponseEntity<?> addLoan();
 
 }
