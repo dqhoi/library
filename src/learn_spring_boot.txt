@@ -1,0 +1,9 @@
+- Cấu trúc thư mục của spring boot cơ bản :
+    - controller: Thư mục chứa các lớp điều khiển (controllers) xử lý các yêu cầu HTTP và điều hướng chúng.
+    - model: Thư mục chứa các lớp đại diện cho mô hình dữ liệu (POJOs).
+    - repository: Thư mục chứa các lớp thực hiện truy cập dữ liệu và giao tiếp với cơ sở dữ liệu.
+    - service: Thư mục chứa các lớp dịch vụ (services) xử lý logic kinh doanh của ứng dụng.
+
+- @Autowired :
+   - là "tự động nạp (inject)" một đối tượng vào một thành phần cần sử dụng nó.
+
